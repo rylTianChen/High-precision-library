@@ -18,11 +18,17 @@
     错误返回值:
 	    若出现已知错误,返回值都是EMPTY,即空值。
 	    使用isEMPTY()获得一个HP变量是否是空值。例: if(a.isEMPTY())
-    注意:
-	    1. 将HP转换为int或ll时,若HP值超过int或ll范围,返回值是0。
-	    2. 乘方运算限制：当指数的位数超过16位时,判定结果过大,HP_pow()返回EMPTY。
-	    3. 负数取模规则：余数与被除数同号（例：(-7)%3=-1、7%(-3)=1）。
+    注意：
+		1. 将HP转换为int或ll时,若HP值超过int或ll范围,返回值是0。
+		2. 乘方运算限制：当指数的十进制位数超过16位时,判定结果过大,HP_pow()返回EMPTY。
+		3. 负数取模规则：余数与被除数同号（例：(-7)%3=-1、7%(-3)=1）。
 		4. 若参与运算的数包含EMPTY空值，数学运算符返回EMPTY，逻辑运算符返回false。
+		5. 使用左移(<<)、右移(>>)时：
+		   移动位数必须是非负整数，且不超过int最大值（2147483647）
+           负数位移、过大位移或其他非法情况返回EMPTY
+           对负数进行左移/右移，结果可能与内置int/ll类型的移位行为不同
+          （尤其是右移，不保证保留符号位进行算术右移）
+		6. 本库使用千进制（base-1000）内部存储，十进制压缩/解压对用户透明。
     祝您使用愉快!
     若发现问题,请向lyrTianChen09@outlook.com反馈。
 天辰还开发了一个高精度计算器。获取方式：
@@ -41,27 +47,33 @@ Instructions:
     Example: HP a = b + 2 - 3;
     This library provides HP_pow() for exponentiation.
     Example: HP_pow(a, b) returns a raised to the power b.
-Input:
-    You can use std::cin >> a;
-    Or use getint() to read a high-precision integer. Example: a = getint();
-    getint() skips whitespace, reads digits until a non-digit is encountered.
-    On input error, the HP variable is set to EMPTY.
-Output:
-    You can use std::cout << a;
-    Or use putint(a) to print a high-precision number.
-Error handling:
-    Known errors return EMPTY (empty/invalid value).
-    Use isEMPTY() to check: if (a.isEMPTY()) ...
-Notes:
-    1. Converting HP to int or long long returns 0 if the value is out of range.
-    2. Exponentiation limit: if the exponent has more than 16 digits, HP_pow() returns EMPTY.
-    3. Modulo rule for negative numbers: remainder has the same sign as the dividend
-       (e.g. (-7) % 3 == -1, 7 % (-3) == 1).
-    4. If any operand is EMPTY:
-         - arithmetic operators return EMPTY
-         - comparison & logical operators return false
-	5.Uses base-1000 internal storage.
-	  Decimal compression/decompression is handled transparently.
+	Input:
+		You can use std::cin >> a;
+		Or use getint() to read a high-precision integer. Example: a = getint();
+		getint() skips whitespace, reads digits until a non-digit is encountered.
+		On input error, the HP variable is set to EMPTY.
+	Output:
+		You can use std::cout << a;
+		Or use putint(a) to print a high-precision number.
+	Error handling:
+		Known errors return EMPTY (empty/invalid value).
+		Use isEMPTY() to check: if (a.isEMPTY()) ...
+		Notes:
+			1. Converting HP to int or long long returns 0 if the value is out of range.
+			2. Exponentiation limit: if the exponent has more than 16 decimal digits,
+			   HP_pow() returns EMPTY.
+			3. Modulo rule for negative numbers: remainder has the same sign as the dividend
+			   (e.g. (-7) % 3 == -1, 7 % (-3) == 1).
+			4. If any operand is EMPTY:
+				 - arithmetic operators return EMPTY
+				 - comparison & logical operators return false
+			5. For left shift (<<) and right shift (>>):
+			   Shift amount must be a non-negative integer ≤ INT_MAX (2147483647)
+			   Negative shift amount, too large shift, or invalid input returns EMPTY
+			   For negative numbers, shift results may differ from built-in int/long long behavior
+			   (especially right shift, which is not guaranteed to be arithmetic shift preserving sign bit)
+			6. Uses base-1000 internal storage.
+			   Decimal compression/decompression is handled transparently.
 Enjoy using it!
 Please report bugs to: lyrTianChen09@outlook.com
 TianChen also developed a high-precision calculator. Download link:
@@ -85,6 +97,7 @@ namespace grnum{
 	//EMPTY特征: EMPTY[0] = 0    Feature of EMPTY: EMPTY[0] = 0
 	vi ONE(2, 0), M_ONE(2, 0), ZERO(2, 0);//1 -1 0
 	vi BI(3, 0);//1024
+	vi 	TWO(2, 0);
 	char FirstInit = 1;//第一次执行构造函数时初始化全局变量
 	//Initialize global variables on first constructor execution
 	const int MAX_INT = 2147483647, MIN_INT = -2147483648;
@@ -205,8 +218,11 @@ namespace grnum{
 	vi HP_Module(vi a, vi b);
 	
 	//高精度位运算函数声明
+	//Declarations of high-precision bitwise functions
 	vi HP_ThouToBit(vi a);
 	vi HP_BitToThou(vi a);
+	vi HP_LeftPush(vi a, int b);
+	vi HP_RightPush(vi a, int b);
 	vi HP_BitAnd(vi a, vi b);
 	vi HP_BitOr(vi a, vi b);
 	vi HP_BitXor(vi a, vi b);
@@ -244,6 +260,7 @@ namespace grnum{
 					M_ONE[0] = -1, M_ONE[1] = 1;
 					ZERO[0] = 1;
 					BI[0] = 2, BI[1] = 24, BI[2] = 1;
+					TWO[0] = 1, TWO[1] = 2;
 				}
 			}
 			HP(int xi){
@@ -268,6 +285,7 @@ namespace grnum{
 					M_ONE[0] = -1, M_ONE[1] = 1;
 					ZERO[0] = 1;
 					BI[0] = 2, BI[1] = 24, BI[2] = 1;
+					TWO[0] = 1, TWO[1] = 2;
 				}
 			}
 			HP(ll xi){
@@ -292,6 +310,7 @@ namespace grnum{
 					M_ONE[0] = -1, M_ONE[1] = 1;
 					ZERO[0] = 1;
 					BI[0] = 2, BI[1] = 24, BI[2] = 1;
+					TWO[0] = 1, TWO[1] = 2;
 				}
 			}
 			HP(vi &v){
@@ -302,6 +321,7 @@ namespace grnum{
 					M_ONE[0] = -1, M_ONE[1] = 1;
 					ZERO[0] = 1;
 					BI[0] = 2, BI[1] = 24, BI[2] = 1;
+					TWO[0] = 1, TWO[1] = 2;
 				}
 			}
 
@@ -430,8 +450,12 @@ namespace grnum{
 			
 			HP operator << (const HP &bbi) const {
 				if(this->num[0] == 0) return HP(EMPTY);
-				if(bbi.num[0] == 0) return HP(EMPTY);
-				return *this * HP_pow(2, bbi);
+				if(bbi.num[0] <= 0) return HP(EMPTY);
+				if(bbi > MAX_INT) return HP(ZERO);
+				vi a = this->num;
+				int b = int(bbi);
+				vi c = HP_LeftPush(a, b);
+				return HP(c);
 			}
 			HP operator << (const int &bi) const {
 				return *this << HP(bi);
@@ -448,8 +472,11 @@ namespace grnum{
 
 			HP operator >> (const HP &bbi) const {
 				if(this->num[0] == 0) return HP(EMPTY);
-				if(bbi.num[0] == 0) return HP(EMPTY);
-				return *this / HP_pow(2, bbi);
+				if(bbi.num[0] <= 0) return HP(EMPTY);
+				vi a = this->num;
+				int b = int(bbi);
+				vi c = HP_RightPush(a, b);
+				return HP(c);
 			}
 			HP operator >> (const int &bi) const {
 				return *this >> HP(bi);
@@ -1176,6 +1203,33 @@ namespace grnum{
 		b[0] *= sign;
 		HP_PopFrontZero(b);
 		return b;
+	}
+	vi HP_LeftPush(vi a, int b){
+		if(b == 0) return a;
+		a = HP_ThouToBit(a);
+		int na = a[0], t = b/10, i;
+		b %= 10;
+		for(i=a[0]; i; i--) a[i+t] = a[i];
+		for(i=1; i<=t; i++) a[i] = 0;
+		a[0] = na+t;
+		a = HP_BitToThou(a);
+		if(b) a = HP_Multiply(a, HP_Power(TWO, b));
+		return a;
+	}
+	vi HP_RightPush(vi a, int b){
+		if(b == 0) return a;
+		a = HP_ThouToBit(a);
+		int na = a[0], t = b/10, i;
+		int sign = a[na];
+		b %= 10;
+		na -= t;
+		if(na < 1) return sign ? M_ONE : ZERO;
+		for(i=1; i<=na; i++) a[i] = a[i+t];
+		for(; i<=a[0]; i++) a[i] = sign ? 1023 : 0;
+		a[0] = na;
+		a = HP_BitToThou(a);
+		if(b) a = HP_Divide(a, HP_Power(TWO, b));
+		return a;
 	}
 	vi HP_BitAnd(vi a, vi b){
 		int na = abs(a[0]), nb = abs(b[0]);
