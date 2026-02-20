@@ -1270,7 +1270,7 @@ namespace grnum{
 	vi HP_BitNot(vi a){
 		a = HP_ThouToBit(a);
 		int na = a[0], i;
-		for(i=1; i<=na; i++) a[i] = ~a[i];
+		for(i=1; i<=na; i++) a[i] = a[i]^(BIT_JW-1);
 		a = HP_BitToThou(a);
 		return a;
 	}
