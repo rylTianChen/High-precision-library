@@ -29,6 +29,8 @@
            对负数进行左移/右移，结果可能与内置int/ll类型的移位行为不同
           （尤其是右移，不保证保留符号位进行算术右移）
 		6. 本库使用千进制（base-1000）内部存储，十进制压缩/解压对用户透明。
+		7. 你可以从字符串构造一个高精度整数。 例:HP a = "-3298239482049823094328";
+		   若此字符串不是一个数，变量的值是EMPTY。
     祝您使用愉快!
     若发现问题,请向lyrTianChen09@outlook.com反馈。
 天辰还开发了一个高精度计算器。获取方式：
@@ -58,22 +60,25 @@ Instructions:
 	Error handling:
 		Known errors return EMPTY (empty/invalid value).
 		Use isEMPTY() to check: if (a.isEMPTY()) ...
-		Notes:
-			1. Converting HP to int or long long returns 0 if the value is out of range.
-			2. Exponentiation limit: if the exponent has more than 16 decimal digits,
-			   HP_pow() returns EMPTY.
-			3. Modulo rule for negative numbers: remainder has the same sign as the dividend
-			   (e.g. (-7) % 3 == -1, 7 % (-3) == 1).
-			4. If any operand is EMPTY:
-				 - arithmetic operators return EMPTY
-				 - comparison & logical operators return false
-			5. For left shift (<<) and right shift (>>):
-			   Shift amount must be a non-negative integer ≤ INT_MAX (2147483647)
-			   Negative shift amount, too large shift, or invalid input returns EMPTY
-			   For negative numbers, shift results may differ from built-in int/long long behavior
-			   (especially right shift, which is not guaranteed to be arithmetic shift preserving sign bit)
-			6. Uses base-1000 internal storage.
-			   Decimal compression/decompression is handled transparently.
+	Notes:
+		1. Converting HP to int or long long returns 0 if the value is out of range.
+		2. Exponentiation limit: if the exponent has more than 16 decimal digits,
+		   HP_pow() returns EMPTY.
+		3. Modulo rule for negative numbers: remainder has the same sign as the dividend
+		   (e.g. (-7) % 3 == -1, 7 % (-3) == 1).
+		4. If any operand is EMPTY:
+			 - arithmetic operators return EMPTY
+			 - comparison & logical operators return false
+		5. For left shift (<<) and right shift (>>):
+		   Shift amount must be a non-negative integer ≤ INT_MAX (2147483647)
+		   Negative shift amount, too large shift, or invalid input returns EMPTY
+		   For negative numbers, shift results may differ from built-in int/long long behavior
+		   (especially right shift,
+		    which is not guaranteed to be arithmetic shift preserving sign bit)
+		6. Uses base-1000 internal storage.
+		   Decimal compression/decompression is handled transparently.
+		7. You can construct a HP number from a string. e.g.:HP a = "-3298239482049823094328";
+		   If the string is not a number, the HP value will be EMPTY.
 Enjoy using it!
 Please report bugs to: lyrTianChen09@outlook.com
 TianChen also developed a high-precision calculator. Download link:
@@ -85,10 +90,12 @@ TianChen also developed a high-precision calculator. Download link:
 #define GRNUM_DEF_H 1031149997108990
 
 #include<vector>
+#include<string>
 #include<iostream>
 
 namespace grnum{
 	typedef std::vector<int> vi;
+	typedef std::string str;
 	typedef long long ll;
 	const char Ope[] = "*/^%";//运算符 operator
 	const int JW = 1000;//千进制 base-1000 storage
@@ -251,6 +258,7 @@ namespace grnum{
 				if xi, it is an int or ll;
 				if xbi, it is an HP.
    			*/
+			
 			//构造函数 Constructors
 			HP(){
 				num.clear(); num.push_back(0);
@@ -324,7 +332,71 @@ namespace grnum{
 					TWO[0] = 1, TWO[1] = 2;
 				}
 			}
-
+			HP(str s){
+				num.clear(), num.push_back(0);
+				int n = 0, f=1;
+				for(auto ch : s){
+					if(IsDigit(ch)){
+						n++;
+						num.push_back(ch-48);
+					}else if(IsSign(ch)){
+						if(!n) f = -1;
+						else{
+							n = -1;
+							break;
+						}
+					}else{
+						n = -1;
+						break;
+					}
+				}
+				if(n > 0){
+					num[0] = n*f;
+					HP_reverse(num);
+					num = HP_zip(num);
+				}else num = EMPTY;
+				if(FirstInit){
+					FirstInit = 0;
+					ONE[1] = ONE[0] = 1;
+					M_ONE[0] = -1, M_ONE[1] = 1;
+					ZERO[0] = 1;
+					BI[0] = 2, BI[1] = 24, BI[2] = 1;
+					TWO[0] = 1, TWO[1] = 2;
+				}
+			}
+			HP(const char *p){
+				num.clear(), num.push_back(0);
+				int n = 0, f = 1;
+				char ch;
+				for(; ch=*p; p++){
+					if(IsDigit(ch)){
+						n++;
+						num.push_back(ch-48);
+					}else if(IsSign(ch)){
+						if(!n) f = -1;
+						else{
+							n = -1;
+							break;
+						}
+					}else{
+						n = -1;
+						break;
+					}
+				}
+				if(n > 0){
+					num[0] = n*f;
+					HP_reverse(num);
+					num = HP_zip(num);
+				}else num = EMPTY;
+				if(FirstInit){
+					FirstInit = 0;
+					ONE[1] = ONE[0] = 1;
+					M_ONE[0] = -1, M_ONE[1] = 1;
+					ZERO[0] = 1;
+					BI[0] = 2, BI[1] = 24, BI[2] = 1;
+					TWO[0] = 1, TWO[1] = 2;
+				}
+			}
 			
 			//重载运算符 Overloaded operator
 			HP operator + (const HP &bbi) const {
