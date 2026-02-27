@@ -11,7 +11,7 @@
         使用std::cin进行输入。
 	    或者使用getHP()输入一个高精度整数。例: a = getHP();
 	    getHP()会先过滤不可见字符,然后开始输入,遇到非数字字符时结束输入。
-	    如果出现输入错误,高精度变量的值是EMPTY。
+	    如果没有输入数,高精度变量的值是EMPTY。
     输出:
     	使用std::cout进行输出。
     	或者使用putHP()输出一个高精度数。例: putHP(a);
@@ -63,7 +63,7 @@ Instructions:
 		You can use std::cin >> a;
 		Or use getHP() to read a high-precision integer. Example: a = getHP();
 		getHP() skips whitespace, reads digits until a non-digit is encountered.
-		On input error, the HP variable is set to EMPTY.
+		If no number is inputed, the HP variable is set to EMPTY.
 	Output:
 		You can use std::cout << a;
 		Or use putHP(a) to print a high-precision number.
@@ -1088,6 +1088,7 @@ namespace grnum{
 					}//读入数字 read in digits
 					else break;//其他字符 other characters
 				}
+				if(t >= 32) is.putback(t);
 				if(!za) za = '+';
 				a[0] = na*signTOint(za);
 				if(!a[0]) cbi.num = EMPTY;
@@ -1108,7 +1109,6 @@ namespace grnum{
 				return os;
 			}
 
-			friend HP getHP();
 			friend int putHP(HP cbi);
 	};
 
