@@ -22,14 +22,14 @@
     注意：
 		1. 将HP转换为int或ll时,若HP值超过int或ll范围,返回值是0。
 		2. 乘方运算限制：当指数的十进制位数超过16位时,判定结果过大,HP_pow()返回EMPTY。
-		3. 负数取模规则：余数与被除数同号（例：(-7)%3=-1、7%(-3)=1）。
+		3. 负数取模规则：余数与被除数同号(例：(-7)%3=-1、7%(-3)=1)。
 		4. 若参与运算的数包含EMPTY空值，数学运算符返回EMPTY，逻辑运算符返回false。
 		5. 使用左移(<<)、右移(>>)时：
-		   移动位数必须是非负整数，且不超过int最大值（2147483647）
+		   移动位数必须是非负整数，且不超过int最大值(2147483647)
            负数位移、过大位移或其他非法情况返回EMPTY
            对负数进行左移/右移，结果可能与内置int/ll类型的移位行为不同
-          （尤其是右移，不保证保留符号位进行算术右移）
-		6. 本库使用千进制（base-1000）内部存储，十进制压缩/解压对用户透明。
+           (尤其是右移，不保证保留符号位进行算术右移)
+		6. 本库使用千进制(base-1000)内部存储，十进制压缩/解压对用户透明。
 		7. 你可以从字符串构造一个高精度整数。 例:HP a = "-3298239482049823094328";
 		   若此字符串不是一个数，变量的值是EMPTY。
 		8. 若计算结果出现错误，即某些位上的值是负数，返回值是EMPTY。
@@ -119,6 +119,8 @@ TianChen also developed a high-precision calculator.
 
 #ifndef GRNUM_DEF_H
 #define GRNUM_DEF_H 1031149997108990
+//猜猜GRNUM_DEF_H有什么意思。
+//Guess what does GRNUM_DEF_H means.
 
 #include<vector>
 #include<string>
@@ -128,20 +130,21 @@ namespace grnum{
 	typedef std::vector<int> vi;
 	typedef std::string str;
 	typedef long long ll;
+	
 	const char Ope[] = "*/^%";//运算符 operator
 	const int JW = 1000;//千进制 base-1000 storage
 	const int BIT_JW = 1024;//1024进制，用于位运算
 	const int KAR_LIMIT = 128;
 	//使用Karatsuba算法的长度最小值 Mininum length for using Karatsuba
+	const int MAX_INT = 2147483647, MIN_INT = -2147483648;
+	const ll MAX_LL =  9223372036854775807ll, MIN_LL = -9223372036854775807ll-1;
+	
+	char FirstInit = 1;//第一次执行构造函数时初始化全局变量
 	vi EMPTY(1, 0);//Error时返回值 Invalid/empty value(error indicator)
 	//EMPTY特征: EMPTY[0] = 0    Feature of EMPTY: EMPTY[0] = 0
 	vi ONE(2, 0), M_ONE(2, 0), ZERO(2, 0);//1 -1 0
 	vi BI(3, 0);//1024
 	vi 	TWO(2, 0), TEN(2, 0);
-	char FirstInit = 1;//第一次执行构造函数时初始化全局变量
-	//Initialize global variables on first constructor execution
-	const int MAX_INT = 2147483647, MIN_INT = -2147483648;
-	const ll MAX_LL =  9223372036854775807ll, MIN_LL = -9223372036854775807ll-1;
 	void init(){
 		ONE[1] = ONE[0] = 1;
 		M_ONE[0] = -1, M_ONE[1] = 1;
@@ -149,7 +152,7 @@ namespace grnum{
 		BI[0] = 2, BI[1] = 24, BI[2] = 1;
 		TWO[0] = 1, TWO[1] = 2;
 		TEN[0] = 1, TEN[1] = 10;
-	}
+	}//Initialize global variables on first constructor execution
 
 	//数相关函数 functions about numbers
 	int max(int x, int y) {return x>y ? x : y;}
@@ -169,7 +172,7 @@ namespace grnum{
 
 	//字符相关函数 functions about characters
 	char PosiNega(char x) {return x=='+' ? '-' : '+';}
-	char signOFmul(char x, char y) {return x==y ? '+' : '-';}
+	char signINmul(char x, char y) {return x==y ? '+' : '-';}
 	char IsDigit(char t) {return t>='0' && t<='9';}// 是数字
 	char IsSign(char t) {return t=='+' || t=='-';}// 是正负号
 	char IsOpe(char x){//是运算符
@@ -180,8 +183,8 @@ namespace grnum{
 
 	//数和符号转换函数 functions about converting of numbers and characters
 	char intTOsign(int x) {return x>=0 ? '+' : '-';}
-	char signTOint(char x) {return x=='+' ? 1 : -1;}
 	char llTOsign(ll x) {return x>=0 ? '+' : '-';}
+	char signTOint(char x) {return x=='+' ? 1 : -1;}
 
 	//vector相关函数 functions about vector
 	char HP_IsZERO(vi &a) {return abs(a[0])==1 && !a[1];}//是0 Checks if the value is 0
@@ -218,7 +221,8 @@ namespace grnum{
 	    a.resize(n+5, 0);
 	    int nb = (n+2)/3;
 	    vi b(nb+5, 0);
-	    for(i=1; i<=n; i+=3) b[i/3+1] = a[i+2]*100+a[i+1]*10+a[i];
+	    for(i=1; i<=n; i+=3)
+			b[i/3+1] = a[i+2]*100+a[i+1]*10+a[i];
 	    b[0] = f*nb;
 	    HP_PopFrontZero(b);
 	    return b;
@@ -237,12 +241,12 @@ namespace grnum{
 	    HP_PopFrontZero(b);
 	    return b;
 	}
-	ll HP_vecTOll(vi b){//高精度转为ll    Convert high-precision to long long
+	ll HP_vecTOll(vi b){
 	    ll ans = 0; int nb = abs(b[0]);
 		if(nb > 5) return 0;//可能溢出
 	    while(nb) ans = ans*JW+b[nb--];
 	    return ans;
-	}
+	}//高精度转为ll    Convert HP to long long
 	vi HP_intTOvec(int ai){
 		vi b(1, 0);
 		int nb = 0;
@@ -263,7 +267,7 @@ namespace grnum{
 	}//合法:0 不合法:1    Valid:0 Invalid:1
 
 	//高精度计算函数声明
-	//Declarations of high-precision calculation functions
+	//Declarations of HP calculation functions
 	vi HP_Plus(vi a, vi b);
 	vi HP_Minus(vi a, vi b);
 	vi HP_Multiply(vi a, vi b);
@@ -275,7 +279,7 @@ namespace grnum{
 	vi HP_Module(vi a, vi b);
 
 	//高精度位运算函数声明
-	//Declarations of high-precision bitwise functions
+	//Declarations of HP bitwise functions
 	vi HP_ThouToBit(vi a);
 	vi HP_BitToThou(vi a);
 	vi HP_LeftPush(vi a, int b);
@@ -293,9 +297,9 @@ namespace grnum{
     		/*
             变量命名规则:
             	以变量x为例。
-            	若名称形如x,说明x是一个vi
-            	若名称形如xi,说明xi是一个int或ll
-            	若名称形如xbi,说明xbi是一个HP
+            	若名称形如x,x是一个vi
+            	若名称形如xi,xi是一个int或ll
+            	若名称形如xbi,xbi是一个HP
 			*/
 			/*
 			Variable naming rules:
@@ -314,6 +318,7 @@ namespace grnum{
 				}
 			}
 			HP(int xi){
+				num.clear(), num.push_back(0);
 				if(!xi){
 					num.push_back(1);
 					num.push_back(0);
@@ -321,35 +326,34 @@ namespace grnum{
 				}
 				char z = intTOsign(xi);
 				xi = abs(xi);
-				vi temp(1, 0);
 				while(xi){
-					temp.push_back(xi%10);
+					num.push_back(xi%10);
 					xi /= 10;
 				}
-				int len = temp.size()-1;
-				temp[0] = signTOint(z)*len;
-				num = HP_zip(temp);
+				int len = num.size()-1;
+				num[0] = signTOint(z)*len;
+				num = HP_zip(num);
 				if(FirstInit){
 					FirstInit = 0;
 					init();
 				}
 			}
 			HP(ll xi){
+				num.clear(), num.push_back(0);
 				if(!xi){
 					num.push_back(1);
 					num.push_back(0);
 					return;
 				}
 				char z = llTOsign(xi);
-				xi = xi>0 ? xi : -xi;
-				vi temp(1, 0);
+				xi = abs(xi);
 				while(xi){
-					temp.push_back(xi%10);
+					num.push_back(xi%10);
 					xi /= 10;
 				}
-				int len = temp.size()-1;
-				temp[0] = signTOint(z)*len;
-				num = HP_zip(temp);
+				int len = num.size()-1;
+				num[0] = signTOint(z)*len;
+				num = HP_zip(num);
 				if(FirstInit){
 					FirstInit = 0;
 					init();
@@ -441,9 +445,10 @@ namespace grnum{
 				return ret;
 			}
 			int sign() const {
-				if(num[0] > 0) return 1;
+				if(num[0]==1 && num[1]==0) return 0;
+				else if(num[0] > 0) return 1;
 				else if(num[0] < 0) return -1;
-				else return 0;
+				else return 0;//EMPTY
 			}
 			int GetDigit(int p) const {
 				int n = abs(num[0]);
@@ -892,6 +897,10 @@ namespace grnum{
 			friend bool operator != (const ll ai, const HP &bbi){
 				return HP(ai) != bbi;
 			}
+			
+			friend bool operator ! (const HP &bbi){
+				return bbi.num[0]==1 && bbi.num[1]==0;
+			}
 
 			operator int() const {
 				if(*this>MAX_INT || *this<MIN_INT) return 0;
@@ -1217,7 +1226,7 @@ namespace grnum{
 	}
 	vi HP_SimMul(vi a, vi b){
 	    char za=intTOsign(a[0]), zb=intTOsign(b[0]);
-	    char zc = signOFmul(za, zb);
+	    char zc = signINmul(za, zb);
 	    int na=abs(a[0]), nb=abs(b[0]);
 	    int nc = na+nb, i, j;
 	    a.resize(nc+1, 0);
@@ -1235,7 +1244,7 @@ namespace grnum{
 	}
 	vi HP_Multiply(vi a, vi b){
 	    char za=intTOsign(a[0]), zb=intTOsign(b[0]);
-	    char zc = signOFmul(za, zb);
+	    char zc = signINmul(za, zb);
 	    int na=abs(a[0]), nb=abs(b[0]);
 		if(!na || !nb) return EMPTY;
 	    int nc = na+nb;
@@ -1268,7 +1277,7 @@ namespace grnum{
 	}
 	vi HP_Divide(vi a, vi b){
 	    char za=intTOsign(a[0]), zb=intTOsign(b[0]);
-	    char zc = signOFmul(za, zb);
+	    char zc = signINmul(za, zb);
 	    int na=abs(a[0]), nb=abs(b[0]);
 		if(!na || !nb) return EMPTY;
 		if(na < nb) return ZERO;
